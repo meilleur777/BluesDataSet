@@ -1,0 +1,19 @@
+Document collection
+
+Topic of dataset is Blues Music. Because it's my favorite music genre. I'm interested in playing Blues, especially with Electric Guitar. So I will have more focus on musicians that play some sort of guitar.
+
+I scrap data with program made with python. I use ChatGpt, so that I can find some authoritative sources from web.
+
+This is my github repositary that contains program and dataset.
+https://github.com/meilleur777/BluesDataSet
+
+Source is three trustworthy sites.
+1. Wikipedia: https://en.wikipedia.org/wiki/List_of_blues_musicians
+2. MusicBrainz: https://musicbrainz.org/
+3. Discogs: https://www.discogs.com/
+
+I will not explain about scraper python program, since they are simple and made with Chatgpt.
+
+todo
+get key for discogs
+make dataset sucecessfully
