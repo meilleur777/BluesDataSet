@@ -118,7 +118,3 @@ The scraper creates several output files in the specified directory:
 - Implement reasonable delays between requests to avoid overloading servers
 - Use the data for personal research purposes only, respecting copyright restrictions
 - Consider reaching out to website administrators for permission if using data commercially
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
