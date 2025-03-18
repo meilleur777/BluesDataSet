@@ -1,0 +1,15 @@
+# Core dependencies (latest stable versions)
+requests>=2.31.0
+beautifulsoup4>=4.12.2
+pandas>=2.0.3
+python-dotenv>=1.0.0
+
+# API clients
+musicbrainzngs>=0.7.1
+
+# HTML parsing (optional)
+lxml>=4.9.3
+html5lib>=1.1
+
+# Data processing (optional)
+openpyxl>=3.1.2
