@@ -49,7 +49,7 @@ BluesDataSet/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/BluesDataSet.git
+   git clone https://github.com/meilleur777/BluesDataSet.git
    cd BluesDataSet
    ```
 
