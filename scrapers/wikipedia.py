@@ -1,4 +1,5 @@
 import requests
+import pandas as pd
 from bs4 import BeautifulSoup
 from .base import BaseScraper  # Importing the correct base class
 
@@ -10,11 +11,12 @@ class WikipediaScraper(BaseScraper):
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
+        self.source_name = "Wikipedia"
 
     def scrape(self):
         """
-        Scrape blues musicians data from Wikipedia and return as a list of dictionaries.
-        Each dictionary contains Name, Birth_Year, Death_Year, Origin, Primary_Style, and References.
+        Scrape blues musicians data from Wikipedia and return as a DataFrame.
+        Each row contains Name, Birth_Year, Death_Year, Origin, Primary_Style, and URL.
         """
         try:
             # Fetch the webpage
@@ -31,7 +33,7 @@ class WikipediaScraper(BaseScraper):
 
             if not tables:
                 print("No tables found with the specified class. The page structure might have changed.")
-                return []
+                return pd.DataFrame()  # Return empty DataFrame instead of list
 
             # Initialize a list to store all musician data
             all_musicians = []
@@ -77,42 +79,39 @@ class WikipediaScraper(BaseScraper):
 
                         # Create a musician data dictionary
                         musician_data = {
-                            'Name': name,
-                            'URL': full_url,
-                            'Birth_Year': birth_year,
-                            'Death_Year': death_year,
-                            'Origin': origin,
-                            'Primary_Style': primary_style
+                            'name': name,  # Standardized field names for consistency
+                            'url': full_url,
+                            'birth_year': birth_year,
+                            'death_year': death_year,
+                            'origin': origin,
+                            'primary_style': primary_style,
+                            'source': 'Wikipedia'  # Add source field to match other scrapers
                         }
 
                         # Add the musician to our list
                         all_musicians.append(musician_data)
 
+            # Convert list to DataFrame
+            musicians_df = pd.DataFrame(all_musicians)
+
             # Save the data using the parent class's save_data function
-            if all_musicians:
-                self.save_data(all_musicians, 'wikipedia_blues_musicians.csv')
-                print(f"Data saved to 'wikipedia_blues_musicians.csv'")
+            if not musicians_df.empty:
+                # Use save_data which will handle saving both CSV and JSON
+                return self.save_data(musicians_df, 'wikipedia_blues_musicians.csv')
             else:
                 print("No musician data found.")
-
-            # Return the data for potential further processing
-            return all_musicians
+                return pd.DataFrame()
 
         except requests.exceptions.RequestException as e:
             print(f"Error fetching the webpage: {e}")
-            return []
+            return pd.DataFrame()  # Return empty DataFrame instead of list
         except Exception as e:
             print(f"An error occurred: {e}")
-            return []
+            return pd.DataFrame()  # Return empty DataFrame instead of list
 
     def run(self):
         """Main method to execute the scraping process"""
         print("Starting to scrape Wikipedia for Blues musicians data...")
-        musicians = self.scrape()
-        print(f"Scraping completed. {len(musicians)} musicians found.")
-
-
-# If this script is run directly, execute the scraper
-if __name__ == "__main__":
-    scraper = WikipediaScraper()
-    scraper.run()
+        musicians_df = self.scrape()
+        print(f"Scraping completed. {len(musicians_df)} musicians found.")
+        return musicians_df  # Return the DataFrame
