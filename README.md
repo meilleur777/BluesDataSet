@@ -84,40 +84,6 @@ Run the main script to scrape data from all sources:
 python main.py
 ```
 
-Optional arguments:
-```bash
-python main.py --output-dir=my_data  # Specify output directory
-python main.py --sources=wikipedia,discogs  # Only run specific scrapers
-python main.py --pages=3  # Limit number of pages scraped (where applicable)
-```
-
-### Python API
-
-Import the application in your own code:
-
-```python
-from main import BluesScraperApp
-
-# Initialize the scraper
-app = BluesScraperApp(output_dir="my_data")
-
-# List all available sources
-sources = app.list_sources()
-print(f"Available sources: {sources}")
-
-# Run a specific scraper
-wikipedia_data = app.run_scraper("wikipedia")
-print(f"Collected {len(wikipedia_data)} artists from Wikipedia")
-
-# Run all scrapers and merge results
-all_artists = app.run_all_scrapers()
-print(f"Total unique artists collected: {len(all_artists)}")
-
-# Access artist data
-for artist in all_artists.head(5).itertuples():
-    print(f"Name: {artist.name}, Born: {artist.birth_year}, Style: {artist.primary_style}")
-```
-
 ## Output Files
 
 The scraper creates several output files in the specified directory:
