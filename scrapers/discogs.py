@@ -125,12 +125,12 @@ class DiscogsScraper(BaseScraper):
 
                     # Create Authorization header with exact format required
                     auth_header = (
-                            'OAuth oauth_consumer_key="' + self.consumer_key + '", '
-                                                                               'oauth_nonce="' + oauth_nonce + '", '
-                                                                                                               'oauth_token="' + self.oauth_token + '", '
-                                                                                                                                                    'oauth_signature="' + self.consumer_secret + '&' + self.oauth_token_secret + '", '
-                                                                                                                                                                                                                                 'oauth_signature_method="PLAINTEXT", '
-                                                                                                                                                                                                                                 'oauth_timestamp="' + oauth_timestamp + '"'
+                        'OAuth oauth_consumer_key="' + self.consumer_key + '", '
+                        'oauth_nonce="' + oauth_nonce + '", '
+                        'oauth_token="' + self.oauth_token + '", '
+                        'oauth_signature="' + self.consumer_secret + '&' + self.oauth_token_secret + '", '
+                        'oauth_signature_method="PLAINTEXT", '
+                        'oauth_timestamp="' + oauth_timestamp + '"'
                     )
 
                     headers = {
