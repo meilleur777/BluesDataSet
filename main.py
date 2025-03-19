@@ -4,9 +4,9 @@ import os
 import pandas as pd
 import json
 from dotenv import load_dotenv
-# from scrapers.wikipedia import WikipediaScraper
+from scrapers.wikipedia import WikipediaScraper
 from scrapers.discogs import DiscogsScraper
-# from scrapers.musicbrainz import MusicBrainzScraper
+from scrapers.musicbrainz import MusicBrainzScraper
 from scrapers.utils import ScraperProgress
 
 # Load environment variables
@@ -26,33 +26,33 @@ class BluesScraperApp:
 
         # Initialize scrapers - only Discogs active
         self.scrapers = {
-            # 'wikipedia': WikipediaScraper(output_dir),
+            'wikipedia': WikipediaScraper(output_dir),
             'discogs': DiscogsScraper(output_dir),
-            # 'musicbrainz': MusicBrainzScraper(output_dir)
+            'musicbrainz': MusicBrainzScraper(output_dir)
         }
 
     def list_sources(self):
         """Print a list of all data sources being used"""
         print("\n=== Blues Artist Data Sources ===")
         sources = [
-            # {
-            #     "name": "Wikipedia",
-            #     "url": "https://en.wikipedia.org/wiki/List_of_blues_musicians",
-            #     "api_required": False,
-            #     "description": "Encyclopedia with lists of blues musicians categorized by instrument"
-            # },
+            {
+                "name": "Wikipedia",
+                "url": "https://en.wikipedia.org/wiki/List_of_blues_musicians",
+                "api_required": False,
+                "description": "Encyclopedia with lists of blues musicians categorized by instrument"
+            },
             {
                 "name": "Discogs",
                 "url": "https://www.discogs.com/",
                 "api_required": True,
                 "description": "Database and marketplace for music recordings with detailed artist and release information"
             },
-            # {
-            #     "name": "MusicBrainz",
-            #     "url": "https://musicbrainz.org/",
-            #     "api_required": True,
-            #     "description": "Open music encyclopedia with structured data on artists, releases, and recordings"
-            # }
+            {
+                "name": "MusicBrainz",
+                "url": "https://musicbrainz.org/",
+                "api_required": True,
+                "description": "Open music encyclopedia with structured data on artists, releases, and recordings"
+            }
         ]
 
         for source in sources:
@@ -139,77 +139,54 @@ class BluesScraperApp:
             print("No data collected from any source.")
             return None
 
-    def merge_data(self, dataframes):
+    def merge_data(self, results):
         """
-        Merge data from multiple sources and deduplicate.
+        Merge data from different sources into a single DataFrame
 
         Args:
-            dataframes: List of DataFrames to merge
+            results: List of DataFrames from different sources
 
         Returns:
             Merged DataFrame
         """
-        if not dataframes:
-            return None
+        import json
 
-        print("\nMerging data from all sources...")
-        merged_df = pd.concat(dataframes, ignore_index=True)
+        if not results:
+            return pd.DataFrame()
 
-        # Basic deduplication by name
-        print(f"Before deduplication: {len(merged_df)} records")
-        merged_df['name_lower'] = merged_df['name'].str.lower()
-        merged_df = merged_df.drop_duplicates(subset=['name_lower'])
-        merged_df = merged_df.drop(columns=['name_lower'])
-        print(f"After deduplication: {len(merged_df)} records")
+        # Combine all dataframes
+        merged_df = pd.concat(results, ignore_index=True)
 
-        # Save merged data
-        csv_filepath = f"{self.output_dir}/all_blues_artists.csv"
-
-        # Ensure complex types are handled correctly in CSV
+        # Handle list columns - convert to strings for better readability
         for column in merged_df.columns:
             if merged_df[column].apply(lambda x: isinstance(x, list)).any():
                 merged_df[column] = merged_df[column].apply(
-                    lambda x: ', '.join(x) if isinstance(x, list) else x
+                    lambda x: self.process_list_data(x) if isinstance(x, list) else x
                 )
-
-        merged_df.to_csv(csv_filepath, index=False)
-        print(f"Saved {len(merged_df)} unique artists to {csv_filepath}")
-
-        # Save artist names to text file
-        txt_filepath = f"{self.output_dir}/all_blues_artists.txt"
-        with open(txt_filepath, 'w', encoding='utf-8') as f:
-            f.write(f"All Blues Artists (Combined Sources)\n")
-            f.write(f"=================================\n\n")
-            f.write(f"Total Artists: {len(merged_df)}\n\n")
-
-            # List all artist names alphabetically
-            sorted_artists = sorted(merged_df['name'].tolist())
-            f.write("Artist Names:\n")
-            for i, name in enumerate(sorted_artists, 1):
-                f.write(f"{i}. {name}\n")
-
-            # Count by source as additional info
-            f.write("\nArtists by Source:\n")
-            sources = merged_df['source'].value_counts().to_dict()
-            for source, count in sources.items():
-                f.write(f"- {source}: {count} artists\n")
-
-        print(f"Saved combined artist list to {txt_filepath}")
-
-        # Also save complete data to JSON to preserve all fields
-        json_filepath = f"{self.output_dir}/all_blues_artists.json"
-        with open(json_filepath, 'w', encoding='utf-8') as f:
-            records = []
-            for record in merged_df.to_dict('records'):
-                for key, value in record.items():
-                    if isinstance(value, list):
-                        record[key] = ', '.join(value)
-                records.append(record)
-            json.dump(records, f, indent=2, ensure_ascii=False)
-        print(f"Saved complete data to {json_filepath}")
 
         return merged_df
 
+    def process_list_data(self, data):
+        """
+        Process list data based on its content
+
+        Args:
+            data: List of data
+
+        Returns:
+            String representation of the list
+        """
+        if not data:
+            return ""
+
+        # Check if the list contains dictionaries
+        if any(isinstance(item, dict) for item in data):
+            # For lists containing dictionaries, convert to JSON string
+            import json
+            return json.dumps(data)
+
+        # For simple lists of strings or other simple types, join with commas
+        return ', '.join(str(item) for item in data)
 
 if __name__ == "__main__":
     app = BluesScraperApp()
