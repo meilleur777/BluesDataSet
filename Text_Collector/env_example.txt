@@ -1,0 +1,9 @@
+# Discogs API credentials
+# Get these by registering an application at https://www.discogs.com/settings/developers
+DISCOGS_CONSUMER_KEY=your_consumer_key_here
+DISCOGS_CONSUMER_SECRET=your_consumer_secret_here
+DISCOGS_USER_AGENT="BluesArtistCollector/1.0 +https://yourwebsite.com"
+
+# OAuth tokens (will be populated after authentication)
+DISCOGS_OAUTH_TOKEN=
+DISCOGS_OAUTH_TOKEN_SECRET=
