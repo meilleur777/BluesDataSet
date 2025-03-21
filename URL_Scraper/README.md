@@ -1,16 +1,15 @@
-# Blues Artists Web Scraper
+# Blues Artists URL Collector
 
-A comprehensive data collection tool for blues music researchers, historians, and enthusiasts. This application gathers detailed information about blues artists from multiple authoritative sources, creating a rich dataset that can be used for research, analysis, and discovery of blues music heritage.
+A focused data collection tool for blues music researchers, historians, and enthusiasts. This application gathers URLs associated with blues artists from authoritative sources, creating a streamlined dataset that can be used for further research and analysis.
 
 ## Overview
 
-This project aims to solve the challenge of collecting dispersed blues artist information by aggregating data from multiple authoritative sources into a single, structured dataset. The resulting data provides a more complete picture of artists' careers, influences, and contributions to the blues genre.
+This project aims to solve the challenge of collecting dispersed blues artist information by aggregating basic artist data (names and URLs) from multiple authoritative sources into a single, structured dataset. The resulting data provides the foundation for deeper research into artists' careers, influences, and contributions to the blues genre.
 
 ## Features
 
-- **Multi-source data collection**: Aggregates artist information from leading music databases, APIs, and websites
-- **Comprehensive artist profiles**: Collects biographical details, discographies, styles, and historical context
-- **Intelligent data merging**: Combines data from different sources with deduplication and conflict resolution
+- **Multi-source data collection**: Aggregates artist names and URLs from leading music databases and websites
+- **Simple, focused output**: Collects only essential identification information (name and URL)
 - **Modular architecture**: Easily extensible with new data sources through standardized scraper interfaces
 - **Responsible API usage**: Implements proper rate limiting, authentication, and respects usage policies
 - **Structured output**: Provides data in both CSV and JSON formats for flexibility in downstream analysis
@@ -19,11 +18,8 @@ This project aims to solve the challenge of collecting dispersed blues artist in
 
 | Source | Description | Data Provided | API Required | Rate Limits |
 |--------|-------------|---------------|--------------|-------------|
-| **Wikipedia** | Web scraping of the List of Blues Musicians page | Names, birth/death years, origins, primary styles | No | Reasonable request frequency |
-| **Discogs** | Music database with comprehensive release information | Detailed artist info, discographies, styles, genres | Yes (OAuth) | 60 requests/min (authenticated) |
-| **MusicBrainz** | Open music encyclopedia with structured data | Artist relationships, recordings, aliases | Yes* | 1 request/sec |
-
-\* *MusicBrainz requires providing application information but doesn't require a token*
+| **Wikipedia** | Web scraping of the List of Blues Musicians page | Names and URLs to artist pages | No | Reasonable request frequency |
+| **Discogs** | Music database with comprehensive release information | Artist names and URLs | Yes (OAuth) | 60 requests/min (authenticated) |
 
 ## Project Structure
 
@@ -41,7 +37,6 @@ BluesDataSet/
     ├── wikipedia.py      # Wikipedia scraper implementation
     ├── discogs.py        # Discogs API scraper implementation
     ├── oauth_client.py   # Discogs OAuth authentication handler
-    ├── musicbrainz.py    # MusicBrainz API scraper implementation
     └── utils.py          # Utility functions for data processing
 ```
 
@@ -49,7 +44,7 @@ BluesDataSet/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/meilleur777/BluesDataSet.git
+   git clone https://github.com/yourusername/BluesDataSet.git
    cd BluesDataSet
    ```
 
@@ -66,7 +61,6 @@ BluesDataSet/
 
 4. Set up API credentials:
    - **Discogs**: Register at [Discogs Developers](https://www.discogs.com/settings/developers) to get your API key
-   - **MusicBrainz**: Follow [MusicBrainz guidelines](https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting) for API usage
 
 5. Configure environment variables:
    ```bash
@@ -91,10 +85,9 @@ The scraper creates several output files in the specified directory:
 | Filename | Format | Description |
 |----------|--------|-------------|
 | `discogs_checkpoint.json` | JSON | Incremental scraping progress for resuming interrupted runs |
-| `discogs_blues_albums.csv/.json` | CSV/JSON | Album information from Discogs including genres, styles, and artists |
-| `discogs_blues_artists.csv/.json` | CSV/JSON | Artist information from Discogs including profiles and releases |
-| `wikipedia_blues_musicians.csv` | CSV | Basic artist information extracted from Wikipedia |
-| `musicbrainz_blues_musicians.csv` | CSV | Artist data from the MusicBrainz database |
+| `discogs_blues_artists.csv/.json` | CSV/JSON | Artist names and URLs from Discogs |
+| `wikipedia_blues_musicians.csv` | CSV | Artist names and URLs extracted from Wikipedia |
+| `blues_artists_combined.csv` | CSV | Combined dataset of all artist names and URLs from all sources |
 
 ## Legal and Ethical Considerations
 
@@ -102,4 +95,3 @@ The scraper creates several output files in the specified directory:
 - Implement reasonable delays between requests to avoid overloading servers
 - Use the data for personal research purposes only, respecting copyright restrictions
 - Consider reaching out to website administrators for permission if using data commercially
-- Be aware that some data may be subject to copyright or other intellectual property rights

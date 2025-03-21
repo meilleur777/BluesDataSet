@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
-from .base import BaseScraper  # Importing the correct base class
+from .base import BaseScraper
 
 
 class WikipediaScraper(BaseScraper):
@@ -16,7 +16,7 @@ class WikipediaScraper(BaseScraper):
     def scrape(self):
         """
         Scrape blues musicians data from Wikipedia and return as a DataFrame.
-        Each row contains Name, Birth_Year, Death_Year, Origin, Primary_Style, and URL.
+        Each row contains only Name and URL.
         """
         try:
             # Fetch the webpage
@@ -33,7 +33,7 @@ class WikipediaScraper(BaseScraper):
 
             if not tables:
                 print("No tables found with the specified class. The page structure might have changed.")
-                return pd.DataFrame()  # Return empty DataFrame instead of list
+                return pd.DataFrame()
 
             # Initialize a list to store all musician data
             all_musicians = []
@@ -58,60 +58,30 @@ class WikipediaScraper(BaseScraper):
                                 full_url = f"https://en.wikipedia.org{wiki_path}"
                             else:
                                 full_url = ""
-                        else:
-                            continue  # Skip if no <a> tag found as per requirements
-
-                        # Extract all td elements for the additional data
-                        data_cells = row.find_all('td')
-
-                        # Initialize variables for data extraction
-                        birth_year = death_year = origin = primary_style = ""
-
-                        # Extract data based on the number of cells
-                        if len(data_cells) >= 1:
-                            birth_year = data_cells[0].text.strip()
-                        if len(data_cells) >= 2:
-                            death_year = data_cells[1].text.strip()
-                        if len(data_cells) >= 3:
-                            origin = data_cells[2].text.strip()
-                        if len(data_cells) >= 4:
-                            primary_style = data_cells[3].text.strip()
-
-                        # Create a musician data dictionary
-                        musician_data = {
-                            'name': name,  # Standardized field names for consistency
-                            'url': full_url,
-                            'birth_year': birth_year,
-                            'death_year': death_year,
-                            'origin': origin,
-                            'primary_style': primary_style,
-                            'source': 'Wikipedia'  # Add source field to match other scrapers
-                        }
-
-                        # Add the musician to our list
-                        all_musicians.append(musician_data)
+                            
+                            # Create a musician data dictionary with only name and URL
+                            musician_data = {
+                                'name': name,
+                                'url': full_url
+                            }
+                            
+                            # Add the musician to our list
+                            all_musicians.append(musician_data)
 
             # Convert list to DataFrame
             musicians_df = pd.DataFrame(all_musicians)
 
-            # Save the data using the parent class's save_data function
+            # Return the DataFrame with only name and URL columns
             if not musicians_df.empty:
-                # Use save_data which will handle saving both CSV and JSON
-                return self.save_data(musicians_df, 'wikipedia_blues_musicians.csv')
+                print(f"Collected {len(musicians_df)} blues musicians from Wikipedia")
+                return musicians_df[['name', 'url']]
             else:
-                print("No musician data found.")
+                print("No musician data found on Wikipedia.")
                 return pd.DataFrame()
 
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching the webpage: {e}")
-            return pd.DataFrame()  # Return empty DataFrame instead of list
+            print(f"Error fetching the Wikipedia webpage: {e}")
+            return pd.DataFrame()
         except Exception as e:
-            print(f"An error occurred: {e}")
-            return pd.DataFrame()  # Return empty DataFrame instead of list
-
-    def run(self):
-        """Main method to execute the scraping process"""
-        print("Starting to scrape Wikipedia for Blues musicians data...")
-        musicians_df = self.scrape()
-        print(f"Scraping completed. {len(musicians_df)} musicians found.")
-        return musicians_df  # Return the DataFrame
+            print(f"An error occurred while scraping Wikipedia: {e}")
+            return pd.DataFrame()

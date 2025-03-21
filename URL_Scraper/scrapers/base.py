@@ -1,4 +1,4 @@
-# scrapers/base.py - Base scraper class with artist name listing
+# scrapers/base.py - Simplified base scraper class
 
 import os
 import time
@@ -68,8 +68,14 @@ class BaseScraper(ABC):
         """Implement rate limiting between requests"""
         time.sleep(random.uniform(min_delay, max_delay))
 
-    def save_data(self, data, filename):
-        """Save data to CSV file"""
+    def save_data(self, data, filename=None):
+        """
+        Save only name and URL fields for artists/musicians
+        
+        Note: This method is simplified to match the project requirement changes
+              but individual scrapers don't save files directly anymore.
+              The main application now handles saving the combined file.
+        """
         if not isinstance(data, pd.DataFrame):
             data = pd.DataFrame(data)
 
@@ -77,50 +83,31 @@ class BaseScraper(ABC):
             print(f"No data to save for {self.source_name}")
             return data
 
-        # Fix complex types before saving to CSV
-        for column in data.columns:
-            # Convert list columns to string representation
-            if data[column].apply(lambda x: isinstance(x, list)).any():
-                data[column] = data[column].apply(
-                    lambda x: ', '.join(x) if isinstance(x, list) else x
-                )
-
-        filepath = os.path.join(self.output_dir, filename)
-        data.to_csv(filepath, index=False)
-        print(f"Saved {len(data)} records to {filepath}")
+        # Ensure we only have name and URL columns
+        columns_to_keep = []
+        
+        # Handle name column
+        if 'name' in data.columns:
+            columns_to_keep.append('name')
+        elif 'artist' in data.columns:
+            data['name'] = data['artist']
+            columns_to_keep.append('name')
+        
+        # Handle URL column
+        if 'url' in data.columns:
+            columns_to_keep.append('url')
+        elif 'link' in data.columns:
+            data['url'] = data['link']
+            columns_to_keep.append('url')
+        
+        # Filter to only keep name and URL
+        if columns_to_keep:
+            data = data[columns_to_keep]
+        
+        # Print status but don't save the file (main app will save the combined file)
+        print(f"Collected {len(data)} artist records from {self.source_name}")
 
         return data
-
-    def save_as_text(self, data, filename):
-        """
-        Save a list of artist names to text file
-
-        Args:
-            data: List of dictionaries or DataFrame with artist data
-            filename: Output filename
-        """
-        if isinstance(data, pd.DataFrame):
-            artists = data.to_dict('records')
-        else:
-            artists = data
-
-        if not artists:
-            print(f"No data to save as text for {self.source_name}")
-            return
-
-        filepath = os.path.join(self.output_dir, filename)
-
-        with open(filepath, 'w', encoding='utf-8') as f:
-            f.write(f"{self.source_name} Blues Artists\n")
-            f.write(f"{'=' * len(self.source_name)} {'=' * 14}\n\n")
-            f.write(f"Total Artists: {len(artists)}\n\n")
-
-            # Write a simple list of artist names
-            f.write("Artist Names:\n")
-            for i, artist in enumerate(sorted(artists, key=lambda x: x.get('name', '').lower()), 1):
-                f.write(f"{i}. {artist.get('name', 'Unknown Artist')}\n")
-
-        print(f"Saved artist names to {filepath}")
 
     @abstractmethod
     def scrape(self, **kwargs):
@@ -128,6 +115,6 @@ class BaseScraper(ABC):
         Main scraping method to be implemented by subclasses
 
         Returns:
-            DataFrame of scraped data
+            DataFrame of scraped data with name and URL columns
         """
         pass

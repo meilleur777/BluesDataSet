@@ -5,15 +5,14 @@ import random
 import string
 import requests
 import pandas as pd
-from collections import defaultdict
 import dotenv
 from .base import BaseScraper
 
 
 class DiscogsScraper(BaseScraper):
-    """Scraper for Discogs API focusing on blues albums to find artists"""
+    """Scraper for Discogs API focusing on collecting blues artist names and URLs only"""
 
-    def __init__(self, output_dir="blues_data", env_file="key.env"):
+    def __init__(self, output_dir="blues_data", env_file=".env"):
         super().__init__(output_dir)
         self.api_url = "https://api.discogs.com"
         self.source_name = "Discogs"
@@ -100,15 +99,6 @@ class DiscogsScraper(BaseScraper):
         """
         Make an HTTP request to the Discogs API with OAuth authentication
         and advanced rate limiting + retry logic
-
-        Args:
-            url: URL to request
-            params: Query parameters
-            method: HTTP method (GET, POST, etc.)
-            max_retries: Maximum number of retries on rate limit or server errors
-
-        Returns:
-            Response object
         """
         retry_count = 0
         response = None
@@ -159,8 +149,7 @@ class DiscogsScraper(BaseScraper):
                     else:
                         wait_time = 2 ** retry_count  # Exponential backoff: 2, 4, 8...
 
-                    print(
-                        f"\nRate limit exceeded (429). Waiting {wait_time} seconds before retry {retry_count}/{max_retries}...")
+                    print(f"\nRate limit exceeded (429). Waiting {wait_time} seconds before retry {retry_count}/{max_retries}...")
                     time.sleep(wait_time)
                     continue
 
@@ -168,8 +157,7 @@ class DiscogsScraper(BaseScraper):
                 elif 500 <= response.status_code < 600:
                     retry_count += 1
                     wait_time = 2 ** retry_count
-                    print(
-                        f"\nServer error ({response.status_code}). Waiting {wait_time} seconds before retry {retry_count}/{max_retries}...")
+                    print(f"\nServer error ({response.status_code}). Waiting {wait_time} seconds before retry {retry_count}/{max_retries}...")
                     time.sleep(wait_time)
                     continue
 
@@ -180,8 +168,7 @@ class DiscogsScraper(BaseScraper):
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
                 retry_count += 1
                 wait_time = 2 ** retry_count
-                print(
-                    f"\nConnection error: {e}. Waiting {wait_time} seconds before retry {retry_count}/{max_retries}...")
+                print(f"\nConnection error: {e}. Waiting {wait_time} seconds before retry {retry_count}/{max_retries}...")
                 time.sleep(wait_time)
 
             except Exception as e:
@@ -195,324 +182,108 @@ class DiscogsScraper(BaseScraper):
         else:
             raise Exception(f"Maximum retries ({max_retries}) exceeded without successful response")
 
-    def scrape(self, pages=5, per_page=100, allow_checkpointing=True):
+    def search_artists(self, query="blues", pages=3):
         """
-        Search for top blues albums on Discogs and extract artists
-
+        Search directly for blues artists by name - simpler approach than album search
+        
         Args:
-            pages: Number of pages of albums to retrieve
-            per_page: Results per page
-            allow_checkpointing: Whether to save progress after each page
-
+            query: Search term (default: "blues")
+            pages: Number of search result pages to process
+            
         Returns:
-            DataFrame of artists
+            List of artist dictionaries with name and URL
         """
-        print("Searching Discogs for top blues albums...")
-
-        # This will store all unique artists we find
-        artist_ids = set()
-        artists_data = []
-        albums_data = []
-
-        # Checkpoint file
-        checkpoint_file = os.path.join(self.output_dir, "discogs_checkpoint.json")
-        start_page = 1
-
-        # Try to load checkpoint if enabled
-        if allow_checkpointing and os.path.exists(checkpoint_file):
+        artists = []
+        artist_ids = set()  # To avoid duplicates
+        
+        print(f"Searching Discogs for '{query}' artists...")
+        
+        for page in range(1, pages + 1):
             try:
-                with open(checkpoint_file, 'r') as f:
-                    checkpoint = json.load(f)
-                    if 'artists' in checkpoint and 'albums' in checkpoint and 'last_page' in checkpoint:
-                        artists_data = checkpoint['artists']
-                        albums_data = checkpoint['albums']
-                        artist_ids = set(artist['discogs_id'] for artist in artists_data)
-                        start_page = checkpoint['last_page'] + 1
-                        print(
-                            f"Resuming from checkpoint: {len(artists_data)} artists and {len(albums_data)} albums collected, starting at page {start_page}")
-            except Exception as e:
-                print(f"Error loading checkpoint: {e}")
-
-        # Album search loop
-        for page in range(start_page, pages + 1):
-            try:
-                # Search for blues albums
+                # Search for blues artists directly
                 params = {
-                    "q": "blues",
-                    "type": "master",  # Master releases (canonical albums)
-                    "genre": "Blues",
-                    "per_page": per_page,
-                    "page": page,
-                    "sort": "have,desc"  # Sort by popularity (number of people who have it)
+                    "q": query,
+                    "type": "artist",
+                    "per_page": 100,
+                    "page": page
                 }
-
-                print(f"Processing album page {page}/{pages}...")
-
+                
+                print(f"Processing artist search page {page}/{pages}...")
+                
                 response = self.make_request(
                     url=f"{self.api_url}/database/search",
                     params=params
                 )
-
+                
                 data = response.json()
                 results = data.get("results", [])
-
-                # Process each album
-                page_albums = []
+                
+                # Process each artist result
                 for result in results:
                     try:
-                        # Only process masters
-                        if result.get("type") != "master":
+                        # Make sure it's an artist
+                        if result.get("type") != "artist":
                             continue
-
-                        album_id = result.get("id")
-                        if not album_id:
+                            
+                        artist_id = result.get("id")
+                        title = result.get("title", "")
+                        
+                        # Skip if we've already processed this artist
+                        if artist_id in artist_ids:
                             continue
-
-                        # Get album details
-                        album_data = self.get_album_details(album_id)
-                        if album_data:
-                            page_albums.append(album_data)
-
-                            # Extract artist information from album
-                            if "artists" in album_data:
-                                for artist in album_data["artists"]:
-                                    # Only process new artists we haven't seen yet
-                                    artist_id = artist.get("id")
-                                    if artist_id and artist_id not in artist_ids:
-                                        artist_ids.add(artist_id)
-                                        print(f"+", end="", flush=True)
-
-                                        # Get detailed artist info
-                                        artist_data = self.get_artist_details(artist_id)
-                                        if artist_data:
-                                            artists_data.append(artist_data)
-
-                            print(".", end="", flush=True)
-
+                            
+                        artist_ids.add(artist_id)
+                        
+                        # Create artist info with name and URL only
+                        artist_info = {
+                            "name": title,
+                            "url": f"https://www.discogs.com/artist/{artist_id}"
+                        }
+                        
+                        artists.append(artist_info)
+                        print(".", end="", flush=True)
+                        
                     except Exception as e:
-                        print(f"\nError processing Discogs album: {e}")
-
-                # Add albums from this page
-                albums_data.extend(page_albums)
-
-                # Save checkpoint after each page
-                if allow_checkpointing:
-                    with open(checkpoint_file, 'w') as f:
-                        json.dump({
-                            'artists': artists_data,
-                            'albums': albums_data,
-                            'last_page': page,
-                            'timestamp': time.strftime("%Y-%m-%d %H:%M:%S")
-                        }, f, default=str)
-                    print(
-                        f"\nSaved checkpoint after page {page}: {len(artists_data)} artists and {len(albums_data)} albums collected so far")
-
+                        print(f"\nError processing artist result: {str(e)}")
+                
+                print("")  # New line after the progress dots
+                
                 # Check if we've reached the last page
                 pagination = data.get("pagination", {})
                 if page >= pagination.get("pages", 0):
                     print(f"\nReached the last page of results ({page})")
                     break
-
-                print("")  # New line after dots
-
+                    
             except Exception as e:
-                print(f"Error fetching Discogs album search page {page}: {e}")
-                # Don't exit, try next page
+                print(f"\nError fetching Discogs artist search page {page}: {str(e)}")
+        
+        print(f"Found {len(artists)} artists from Discogs search")
+        return artists
 
-        # Save both artists and albums data
-        print(f"\nCollected data for {len(artists_data)} blues artists from {len(albums_data)} albums")
-        self.save_data(albums_data, "discogs_blues_albums.csv")
-        return self.save_data(artists_data, "discogs_blues_artists.csv")
-
-    def get_album_details(self, master_id):
+    def scrape(self, search_term="blues", pages=3):
         """
-        Get detailed album information from Discogs
-
+        Main scraping method that collects blues artist names and URLs from Discogs
+        
         Args:
-            master_id: Discogs master release ID
-
+            search_term: Search term (default: "blues")
+            pages: Number of search result pages to process
+            
         Returns:
-            Album data dictionary
+            DataFrame containing artist names and URLs
         """
-        try:
-            response = self.make_request(
-                url=f"{self.api_url}/masters/{master_id}"
-            )
-
-            master = response.json()
-
-            # Check if the album has blues in genres or styles
-            genres = master.get("genres", [])
-            styles = master.get("styles", [])
-
-            # Only include albums with blues in their genres or styles
-            blues_related = any(
-                "blues" in genre.lower() for genre in genres
-            ) or any(
-                "blues" in style.lower() for style in styles
-            )
-
-            if not blues_related:
-                return None
-
-            # Extract artists
-            artists_data = []
-            for artist in master.get("artists", []):
-                artist_info = {
-                    "id": artist.get("id"),
-                    "name": artist.get("name"),
-                    "role": artist.get("role", "Main")
-                }
-                artists_data.append(artist_info)
-
-            # Extract relevant data
-            album_data = {
-                "title": master.get("title"),
-                "discogs_id": master.get("id"),
-                "url": master.get("uri"),
-                "year": master.get("year"),
-                "genres": genres,
-                "styles": styles,
-                "artists": artists_data,
-                "tracklist": master.get("tracklist", []),
-                "source": "Discogs"
-            }
-
-            return album_data
-
-        except Exception as e:
-            print(f"\nError getting Discogs album details for ID {master_id}: {e}")
-            return None
-
-    def get_artist_details(self, artist_id):
-        """
-        Get detailed artist information from Discogs
-
-        Args:
-            artist_id: Discogs artist ID
-
-        Returns:
-            Artist data dictionary
-        """
-        try:
-            response = self.make_request(
-                url=f"{self.api_url}/artists/{artist_id}"
-            )
-
-            artist = response.json()
-
-            # Get releases for this artist (up to 3 releases)
-            releases_data = self.get_artist_releases(artist_id, limit=3)
-
-            # Extract relevant data
-            artist_data = {
-                "name": artist.get("name"),
-                "discogs_id": artist.get("id"),
-                "url": artist.get("uri"),
-                "profile": artist.get("profile"),
-                "genres": artist.get("genres", []),
-                "styles": artist.get("styles", []),
-                "releases_count": artist.get("releases_count", 0),
-                "top_releases": releases_data,
-                "source": "Discogs"
-            }
-
-            return artist_data
-
-        except Exception as e:
-            print(f"\nError getting Discogs artist details for ID {artist_id}: {e}")
-            return None
-
-    def get_artist_releases(self, artist_id, limit=3):
-        """
-        Get artist's releases from Discogs
-
-        Args:
-            artist_id: Discogs artist ID
-            limit: Maximum number of releases to retrieve
-
-        Returns:
-            List of release dictionaries
-        """
-        try:
-            params = {
-                "sort": "year",
-                "sort_order": "desc",
-                "per_page": limit,
-                "page": 1
-            }
-
-            response = self.make_request(
-                url=f"{self.api_url}/artists/{artist_id}/releases",
-                params=params
-            )
-
-            data = response.json()
-            releases = data.get("releases", [])
-
-            # Extract relevant release information
-            release_data = []
-            for release in releases:
-                release_info = {
-                    "title": release.get("title"),
-                    "year": release.get("year"),
-                    "type": release.get("type"),
-                    "role": release.get("role")
-                }
-                release_data.append(release_info)
-
-            return release_data
-
-        except Exception as e:
-            print(f"\nError getting Discogs releases for artist ID {artist_id}: {e}")
-            return []
-
-    def save_data(self, data, filename):
-        """
-        Save data to both CSV and JSON files
-
-        Args:
-            data: Data to save
-            filename: Base filename (without extension)
-
-        Returns:
-            DataFrame of saved data
-        """
-        if not isinstance(data, pd.DataFrame):
-            data = pd.DataFrame(data)
-
-        if data.empty:
-            print(f"No data to save for {self.source_name}")
-            return data
-
-        # Save as CSV with basic columns
-        csv_safe_data = data.copy()
-
-        # Convert complex columns to strings
-        for col in csv_safe_data.columns:
-            if csv_safe_data[col].apply(lambda x: isinstance(x, (list, dict))).any():
-                csv_safe_data[col] = csv_safe_data[col].apply(
-                    lambda x: json.dumps(x) if isinstance(x, (list, dict)) else x
-                )
-
-        # Create output directory if it doesn't exist
-        os.makedirs(self.output_dir, exist_ok=True)
-
-        # Save CSV
-        csv_path = os.path.join(self.output_dir, filename)
-        csv_safe_data.to_csv(csv_path, index=False)
-        print(f"Saved {len(data)} records to {csv_path}")
-
-        # Save full data as JSON to preserve complex structures
-        json_path = os.path.join(self.output_dir, filename.replace('.csv', '.json'))
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(
-                data.to_dict('records'),
-                f,
-                ensure_ascii=False,
-                default=str,
-                indent=2
-            )
-        print(f"Saved complete data to {json_path}")
-
-        return data
+        # Search directly for artists - simpler approach
+        artists = self.search_artists(query=search_term, pages=pages)
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(artists)
+        
+        if df.empty:
+            print("No artist data collected from Discogs")
+            return pd.DataFrame()
+            
+        # Ensure we only have name and URL columns
+        if 'name' in df.columns and 'url' in df.columns:
+            return df[['name', 'url']]
+        else:
+            print("Warning: Required columns missing from Discogs results")
+            return df

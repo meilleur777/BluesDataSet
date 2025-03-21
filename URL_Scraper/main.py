@@ -1,12 +1,10 @@
-# main.py - Simplified application with only Discogs active
+# main.py - Simplified application that produces a single CSV output
 
 import os
 import pandas as pd
-import json
 from dotenv import load_dotenv
 from scrapers.wikipedia import WikipediaScraper
 from scrapers.discogs import DiscogsScraper
-from scrapers.musicbrainz import MusicBrainzScraper
 from scrapers.utils import ScraperProgress
 
 # Load environment variables
@@ -14,21 +12,21 @@ load_dotenv()
 
 
 class BluesScraperApp:
-    """Main application class for orchestrating blues artist data collection"""
+    """Main application class for orchestrating blues artist URL collection"""
 
-    def __init__(self, output_dir="blues_data"):
+    def __init__(self, output_dir="blues_data", output_filename="artist_urls.csv"):
         """Initialize the scraper application with output directory"""
         self.output_dir = output_dir
+        self.output_filename = output_filename
 
         # Create output directory if it doesn't exist
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        # Initialize scrapers - only Discogs active
+        # Initialize scrapers - MusicBrainz removed
         self.scrapers = {
             'wikipedia': WikipediaScraper(output_dir),
-            'discogs': DiscogsScraper(output_dir),
-            'musicbrainz': MusicBrainzScraper(output_dir)
+            'discogs': DiscogsScraper(output_dir)
         }
 
     def list_sources(self):
@@ -46,12 +44,6 @@ class BluesScraperApp:
                 "url": "https://www.discogs.com/",
                 "api_required": True,
                 "description": "Database and marketplace for music recordings with detailed artist and release information"
-            },
-            {
-                "name": "MusicBrainz",
-                "url": "https://musicbrainz.org/",
-                "api_required": True,
-                "description": "Open music encyclopedia with structured data on artists, releases, and recordings"
             }
         ]
 
@@ -71,23 +63,29 @@ class BluesScraperApp:
         print(f"\nRunning {source_name} scraper...")
         try:
             df = self.scrapers[source_name].scrape(**kwargs)
-
-            # Also save summary text file
+            
+            # Filter to only include name and url columns
             if df is not None and not df.empty:
-                text_filename = f"{source_name.lower()}_blues_artists.txt"
-                self.scrapers[source_name].save_as_text(df, text_filename)
-
-                # Also save complete data to JSON to preserve all fields
-                json_filepath = f"{self.output_dir}/{source_name.lower()}_blues_artists.json"
-                with open(json_filepath, 'w', encoding='utf-8') as f:
-                    records = []
-                    for record in df.to_dict('records'):
-                        for key, value in record.items():
-                            if isinstance(value, list):
-                                record[key] = ', '.join(value)
-                        records.append(record)
-                    json.dump(records, f, indent=2, ensure_ascii=False)
-                print(f"Saved complete data to {json_filepath}")
+                # Ensure we only keep name and url columns, and drop the rest
+                required_columns = ['name', 'url']
+                existing_columns = df.columns.tolist()
+                
+                # Check if the required columns exist
+                for col in required_columns:
+                    if col not in existing_columns:
+                        print(f"Warning: Column '{col}' not found in {source_name} results")
+                        if col == 'name' and 'artist' in existing_columns:
+                            df['name'] = df['artist']  # Use 'artist' column as fallback for name
+                        elif col == 'url' and 'link' in existing_columns:
+                            df['url'] = df['link']  # Use 'link' column as fallback for url
+                
+                # Filter columns to only include name and url
+                columns_to_keep = [col for col in required_columns if col in df.columns]
+                if len(columns_to_keep) < len(required_columns):
+                    missing = set(required_columns) - set(columns_to_keep)
+                    print(f"Warning: Missing required columns in {source_name} results: {missing}")
+                
+                df = df[columns_to_keep]
 
             return df
         except Exception as e:
@@ -118,7 +116,7 @@ class BluesScraperApp:
         for name, scraper in active_scrapers.items():
             try:
                 progress.start_scraper(name)
-                df = scraper.scrape()
+                df = self.run_scraper(name)  # Use run_scraper to properly filter columns
 
                 if df is not None and not df.empty:
                     results.append(df)
@@ -134,7 +132,14 @@ class BluesScraperApp:
         progress.finish()
 
         if results:
-            return self.merge_data(results)
+            merged_df = self.merge_data(results)
+            
+            # Save the single output file
+            output_path = os.path.join(self.output_dir, self.output_filename)
+            merged_df.to_csv(output_path, index=False)
+            print(f"Saved combined artist data to {output_path}")
+            
+            return merged_df
         else:
             print("No data collected from any source.")
             return None
@@ -149,44 +154,19 @@ class BluesScraperApp:
         Returns:
             Merged DataFrame
         """
-        import json
-
         if not results:
             return pd.DataFrame()
 
         # Combine all dataframes
         merged_df = pd.concat(results, ignore_index=True)
-
-        # Handle list columns - convert to strings for better readability
-        for column in merged_df.columns:
-            if merged_df[column].apply(lambda x: isinstance(x, list)).any():
-                merged_df[column] = merged_df[column].apply(
-                    lambda x: self.process_list_data(x) if isinstance(x, list) else x
-                )
-
+        
+        # Remove duplicates based on name (case-insensitive)
+        merged_df['name_lower'] = merged_df['name'].str.lower()
+        merged_df = merged_df.drop_duplicates(subset=['name_lower'])
+        merged_df = merged_df.drop(columns=['name_lower'])
+        
         return merged_df
 
-    def process_list_data(self, data):
-        """
-        Process list data based on its content
-
-        Args:
-            data: List of data
-
-        Returns:
-            String representation of the list
-        """
-        if not data:
-            return ""
-
-        # Check if the list contains dictionaries
-        if any(isinstance(item, dict) for item in data):
-            # For lists containing dictionaries, convert to JSON string
-            import json
-            return json.dumps(data)
-
-        # For simple lists of strings or other simple types, join with commas
-        return ', '.join(str(item) for item in data)
 
 if __name__ == "__main__":
     app = BluesScraperApp()
@@ -194,7 +174,7 @@ if __name__ == "__main__":
     # Print list of sources
     app.list_sources()
 
-    # Check for environment variables and warn if missing - uncommented Discogs check
+    # Check for environment variables and warn if missing
     if not os.getenv("DISCOGS_TOKEN"):
         print("\nWARNING: DISCOGS_TOKEN not found in environment variables.")
         print("The Discogs scraper will run with limited functionality.")
@@ -205,8 +185,8 @@ if __name__ == "__main__":
     all_artists = app.run_all_scrapers()
 
     if all_artists is not None:
-        print(f"\nCompleted scraping with {len(all_artists)} total unique blues artists.")
-        print(f"Data saved to the '{app.output_dir}' directory.")
+        print(f"\nCompleted scraping with {len(all_artists)} unique blues artists.")
+        print(f"Data saved to '{os.path.join(app.output_dir, app.output_filename)}'")
     else:
         print("\nFailed to collect data from any sources.")
         print("Please check the error messages above and fix the issues before continuing.")
