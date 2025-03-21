@@ -12,11 +12,14 @@ The project consists of two integrated components:
    - Collects and consolidates URLs linked to individual blues artists from diverse sources
    - Processes CSV files containing artist names and web references
 
-2. **Text Collector (!!Developing!!)**:
+2. **Text Collector**:
    - Harvests rich textual information from the collected URLs
    - Focuses on biographical elements, musical style descriptions, career highlights, and collaborations
    - Employs intelligent content filtering to identify influence relationships between artists
    - Extracts mentions of musical techniques, signature styles, and innovations
+
+3. **IR_System**:
+   
 
 ## Long-Term Vision
 
