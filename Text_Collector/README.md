@@ -1,4 +1,4 @@
-# Blues Artist Data Collector
+# Text Collector
 
 This project collects and processes information about blues artists from various sources. It extracts text data from URLs, consolidates them, and organizes the information by artist.
 

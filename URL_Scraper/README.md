@@ -1,4 +1,4 @@
-# Blues Artists URL Collector
+# URL Scraper
 
 A focused data collection tool for blues music researchers, historians, and enthusiasts. This application gathers URLs associated with blues artists from authoritative sources, creating a streamlined dataset that can be used for further research and analysis.
 
