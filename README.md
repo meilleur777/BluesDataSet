@@ -19,7 +19,8 @@ The project consists of two integrated components:
    - Extracts mentions of musical techniques, signature styles, and innovations
 
 3. **IR_System**:
-   
+   - Make Information Retrieval system using Boolean model.
+   - Allows user to perform simple searches with Boolean opeartors.
 
 ## Long-Term Vision
 
@@ -33,6 +34,7 @@ The repository is organized into two main components:
 blues-artist-data/
 ├── URL_Scraper/       # Component for collecting artist URLs
 ├── Text_Collector/    # Component for extracting text information
+├── IR_System/         # Component for Information Retrieval System
 └── README.md          # This file
 ```
 
@@ -42,6 +44,7 @@ Each component has its own dedicated README.md file with specific installation a
 
 1. First, use the URL_Scraper component to collect artist URLs
 2. Then, use the Text_Collector component to gather detailed information about each artist
+3. Use IR_System component to make IR system with .txt files
 
 See the README.md files in each component directory for detailed instructions.
 
