@@ -1,0 +1,47 @@
+ARTIST: The Rolling Stones
+
+PROFILE:
+English rock band formed in London in May 1962. They are one of the longest-lived and most commercially successful groups in rock history. Inducted into the Rock And Roll Hall of Fame in 1989 (Performer).
+
+[i]Band members[/i]
+
+[u]05/1962 - 05/1963[/u]
+[a255182] (Keyboards, piano)
+
+[u]05/1962 - 06/1969[/u]
+[a409290] (Lead and rhythm guitars)
+
+[u]06/1962 - 10/1962[/u]
+[a414255] (Bass)
+
+[u]06/1962 - 12/1962[/u]
+[a677434] (Drums)
+
+[u]06/1962 - present[/u]
+[a90541] (Lead vocals, harmonica, percussion)
+[a166570] (Lead and rhythm guitars, acoustic guitar, backing vocals)
+
+[u]12/1962 - 01/1993[/u]
+[a272814] (Bass)
+
+[u]01/1963 - 08/2021[/u]
+[a299325] (Drums and percussion)
+
+[u]07/1969 - 12/1974[/u]
+[a300117] (Lead and slide guitars)
+
+[u]03/1975 - present[/u]
+[a271311] (Guitars, backing vocals)
+
+RELATED URLS:
+- http://rollingstones.com
+- http://www.facebook.com/therollingstones
+- http://www.imdb.com/name/nm1213869
+- http://www.instagram.com/therollingstones
+- http://soundcloud.com/rolling-stones-official
+- http://rollingstonesofficial.tumblr.com
+- http://twitter.com/RollingStones
+- http://en.wikipedia.org/wiki/The_Rolling_Stones
+- http://www.youtube.com/user/TheRollingStones
+
+Source: https://www.discogs.com/artist/20991

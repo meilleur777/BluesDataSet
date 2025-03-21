@@ -29,11 +29,6 @@ wheels/
 .installed.cfg
 *.egg
 
-# Output data
-blues_data/
-*.csv
-*.json
-
 # OS generated files
 .DS_Store
 .DS_Store?

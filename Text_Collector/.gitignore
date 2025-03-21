@@ -31,14 +31,7 @@ ENV/
 *.swp
 *.swo
 
-# Project specific
-artist_urls.csv
-artist_data/
 *.log
-
-# Keep input directory but ensure it's empty in the repository
-blues_data/*
-!blues_data/.gitkeep
 
 # Environment variables
 .env

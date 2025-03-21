@@ -10,6 +10,7 @@
 *.css   text eol=lf
 *.md    text eol=lf
 *.csv 	text eol=lf
+*.json	text eol=lf
 
 # Force batch scripts to always use CRLF
 *.bat   text eol=crlf
