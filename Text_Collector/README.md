@@ -44,8 +44,8 @@ Text_Collector/
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/blues-artist-data.git
-   cd blues-artist-data/Text_Collector
+   git clone https://github.com/meilleur777/BluesDataSet.git
+   cd BluesDataSet/Text_Collector
    ```
 
 2. Install the required packages:

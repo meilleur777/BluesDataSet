@@ -21,7 +21,7 @@ A Boolean Information Retrieval (IR) system for searching through blues artist t
 1. Clone this repository or download the files:
    ```
    git clone https://github.com/meilleur777/BluesDataSet.git
-   cd blues-ir-system
+   cd BluesDataSet/IR_System
    ```
 
 2. Install the required packages:
