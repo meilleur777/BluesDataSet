@@ -12,7 +12,7 @@ This project aims to solve the challenge of collecting dispersed blues artist in
 - **Simple, focused output**: Collects only essential identification information (name and URL)
 - **Modular architecture**: Easily extensible with new data sources through standardized scraper interfaces
 - **Responsible API usage**: Implements proper rate limiting, authentication, and respects usage policies
-- **Structured output**: Provides data in both CSV and JSON formats for flexibility in downstream analysis
+- **Structured output**: Provides data in a single CSV format for flexibility in downstream analysis
 
 ## Data Sources
 
@@ -24,7 +24,7 @@ This project aims to solve the challenge of collecting dispersed blues artist in
 ## Project Structure
 
 ```
-BluesDataSet/
+URL_Scraper/
 ├── .env                  # Environment variables (API keys, etc.)
 ├── .env.example          # Example/template for the .env file
 ├── .gitignore            # Git ignore file
@@ -45,7 +45,7 @@ BluesDataSet/
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/BluesDataSet.git
-   cd BluesDataSet
+   cd BluesDataSet/URL_Scraper
    ```
 
 2. Create and activate a virtual environment:
@@ -80,18 +80,6 @@ python main.py
 
 ## Output Files
 
-The scraper creates several output files in the specified directory:
-
 | Filename | Format | Description |
 |----------|--------|-------------|
-| `discogs_checkpoint.json` | JSON | Incremental scraping progress for resuming interrupted runs |
-| `discogs_blues_artists.csv/.json` | CSV/JSON | Artist names and URLs from Discogs |
-| `wikipedia_blues_musicians.csv` | CSV | Artist names and URLs extracted from Wikipedia |
-| `blues_artists_combined.csv` | CSV | Combined dataset of all artist names and URLs from all sources |
-
-## Legal and Ethical Considerations
-
-- Always check each website's robots.txt file and terms of service before scraping
-- Implement reasonable delays between requests to avoid overloading servers
-- Use the data for personal research purposes only, respecting copyright restrictions
-- Consider reaching out to website administrators for permission if using data commercially
+| `artist_urls.csv` | CSV | Combined dataset of all artist names and URLs from all sources |

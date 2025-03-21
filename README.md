@@ -18,6 +18,30 @@ The project consists of two integrated components:
    - Employs intelligent content filtering to identify influence relationships between artists
    - Extracts mentions of musical techniques, signature styles, and innovations
 
-### Long-Term Vision
+## Long-Term Vision
 
 The ultimate goal of this project is to create relationship graphs among blues artists. In blues music, there are clear instances of artists influencing one another, similar to how professors pass knowledge to their students. For example, Stevie Ray Vaughan was influenced by artists such as Albert King, Otis Rush, and Muddy Waters. By analyzing these relationships, we can trace how musical techniques, licks, and riffs evolved over generations.
+
+## Project Structure
+
+The repository is organized into two main components:
+
+```
+blues-artist-data/
+├── URL_Scraper/       # Component for collecting artist URLs
+├── Text_Collector/    # Component for extracting text information
+└── README.md          # This file
+```
+
+Each component has its own dedicated README.md file with specific installation and usage instructions.
+
+## Getting Started
+
+1. First, use the URL_Scraper component to collect artist URLs
+2. Then, use the Text_Collector component to gather detailed information about each artist
+
+See the README.md files in each component directory for detailed instructions.
+
+## License
+
+This project is available for personal research and educational purposes. Always respect the terms of service of any websites you scrape.
