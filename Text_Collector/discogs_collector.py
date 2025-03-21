@@ -5,6 +5,7 @@ import requests
 import time
 from urllib.parse import urlparse
 from discogs_oauth_client import DiscogsOAuthClient
+from sanitizer import sanitize_text, sanitize_filename, sanitize_file_content
 
 def extract_discogs_id_from_url(url):
     """
@@ -75,8 +76,8 @@ def collect_artist_info_from_discogs(artist_name, artist_id):
     # Parse the response
     artist_data = response.json()
     
-    # Extract relevant information
-    profile = artist_data.get("profile", "")
+    # Extract relevant information and clean it
+    profile = sanitize_text(artist_data.get("profile", ""))
     
     # Extract information about influences
     # Profile text often contains info about who influenced the artist
@@ -89,24 +90,7 @@ def collect_artist_info_from_discogs(artist_name, artist_id):
     
     return influence_info
 
-def sanitize_filename(name):
-    """
-    Sanitize a string to be used as a filename or directory name.
-    Removes or replaces invalid characters.
-    """
-    # Replace problematic characters with underscores
-    invalid_chars = r'[<>:"/\\|?*\']'
-    sanitized = re.sub(invalid_chars, '_', name)
-    
-    # Replace multiple consecutive underscores with a single one
-    sanitized = re.sub(r'_+', '_', sanitized)
-    
-    # Trim any trailing spaces or dots (problematic on Windows)
-    sanitized = sanitized.strip('. ')
-    
-    return sanitized
-
-def process_discogs_urls(csv_file="artist_urls.csv", output_dir="artist_data"):
+def process_discogs_urls(csv_file="artist_urls.csv", output_dir="blues_artist_data"):
     """
     Process all Discogs URLs from the CSV file using the Discogs API
     """
@@ -151,19 +135,30 @@ def process_discogs_urls(csv_file="artist_urls.csv", output_dir="artist_data"):
                 
                 # Create artist directory with sanitized name
                 safe_artist_name = sanitize_filename(artist_name)
-                artist_dir = os.path.join(output_dir, safe_artist_name.replace(" ", "_"))
+                artist_dir = os.path.join(output_dir, safe_artist_name)
                 os.makedirs(artist_dir, exist_ok=True)
                 
-                # Save artist info
-                output_file = os.path.join(artist_dir, f"{safe_artist_name.replace(' ', '_')}_influence.txt")
+                # Save artist info with new filename pattern
+                output_file = os.path.join(artist_dir, f"{safe_artist_name}_discogs.txt")
                 
+                # Prepare content to be written to file
+                file_content = f"ARTIST: {artist_name}\n\n"
+                file_content += f"PROFILE:\n{artist_info['profile']}\n\n"
+                file_content += "RELATED URLS:\n"
+                
+                for related_url in artist_info['urls']:
+                    # Clean up URLs too
+                    clean_url = sanitize_text(related_url)
+                    file_content += f"- {clean_url}\n"
+                
+                file_content += f"\nSource: https://www.discogs.com/artist/{artist_id}"
+                
+                # Final sanitization of the entire content
+                file_content = sanitize_file_content(file_content, remove_html=False)
+                
+                # Write to file
                 with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(f"ARTIST: {artist_name}\n\n")
-                    f.write(f"PROFILE:\n{artist_info['profile']}\n\n")
-                    f.write("RELATED URLS:\n")
-                    for related_url in artist_info['urls']:
-                        f.write(f"- {related_url}\n")
-                    f.write(f"\nSource: https://www.discogs.com/artist/{artist_id}")
+                    f.write(file_content)
                 
                 print(f"  Saved Discogs information for {artist_name}")
                 

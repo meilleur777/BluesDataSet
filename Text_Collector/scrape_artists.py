@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 import re
 import time
 from urllib.parse import urlparse
+from sanitizer import sanitize_text, sanitize_filename, sanitize_file_content
 
 def load_artist_urls(csv_file="artist_urls.csv"):
     """Load the consolidated artist URLs from CSV."""
@@ -15,7 +16,7 @@ def load_artist_urls(csv_file="artist_urls.csv"):
         print(f"Error loading {csv_file}: {str(e)}")
         return None
 
-def create_output_directory(base_dir="artist_data"):
+def create_output_directory(base_dir="blues_artist_data"):
     """Create the output directory for scraped content."""
     os.makedirs(base_dir, exist_ok=True)
     return base_dir
@@ -55,26 +56,11 @@ def get_influence_content(soup, categories):
         is_relevant = is_relevant_content(text, categories)
         
         if has_influence and is_relevant and len(text) > 100:  # Minimum length to avoid fragments
-            relevant_paragraphs.append(text)
+            # Clean the text before adding
+            clean_text = sanitize_text(text)
+            relevant_paragraphs.append(clean_text)
     
     return relevant_paragraphs
-
-def sanitize_filename(name):
-    """
-    Sanitize a string to be used as a filename or directory name.
-    Removes or replaces invalid characters.
-    """
-    # Replace problematic characters with underscores
-    invalid_chars = r'[<>:"/\\|?*\']'
-    sanitized = re.sub(invalid_chars, '_', name)
-    
-    # Replace multiple consecutive underscores with a single one
-    sanitized = re.sub(r'_+', '_', sanitized)
-    
-    # Trim any trailing spaces or dots (problematic on Windows)
-    sanitized = sanitized.strip('. ')
-    
-    return sanitized
 
 def scrape_artist_content(artist_name, urls, categories, output_dir):
     """Scrape content about an artist from the provided URLs."""
@@ -92,7 +78,7 @@ def scrape_artist_content(artist_name, urls, categories, output_dir):
     
     # Create artist directory with sanitized name
     safe_artist_name = sanitize_filename(artist_name)
-    artist_dir = os.path.join(output_dir, safe_artist_name.replace(" ", "_"))
+    artist_dir = os.path.join(output_dir, safe_artist_name)
     os.makedirs(artist_dir, exist_ok=True)
     
     all_content = []
@@ -109,6 +95,11 @@ def scrape_artist_content(artist_name, urls, categories, output_dir):
         # Skip discogs.com URLs as they'll be handled separately by discogs_collector.py
         if "discogs.com" in url:
             print(f"Skipping {url} - Discogs URLs are processed separately")
+            continue
+            
+        # Skip wikipedia.org URLs as they'll be handled separately by wikipedia_collector.py
+        if "wikipedia.org" in url:
+            print(f"Skipping {url} - Wikipedia URLs are processed separately")
             continue
             
         max_retries = 3
@@ -141,8 +132,8 @@ def scrape_artist_content(artist_name, urls, categories, output_dir):
                 if influence_paragraphs:
                     all_content.extend(influence_paragraphs)
                     
-                    # Save URL source
-                    all_content.append(f"\nSource: {url}\n")
+                    # Save URL source (clean it first)
+                    all_content.append(f"\nSource: {sanitize_text(url)}\n")
                 
                 # Success - break the retry loop
                 break
@@ -163,11 +154,17 @@ def scrape_artist_content(artist_name, urls, categories, output_dir):
                 time.sleep(sleep_time)
     
     if all_content:
-        # Save the scraped content with sanitized filename
-        safe_artist_name = sanitize_filename(artist_name)
-        output_file = os.path.join(artist_dir, f"{safe_artist_name.replace(' ', '_')}_influence.txt")
+        # Save the scraped content with sanitized filename and new naming pattern
+        output_file = os.path.join(artist_dir, f"{safe_artist_name}_web.txt")
+        
+        # Join content with double newlines
+        file_content = "\n\n".join(all_content)
+        
+        # Final sanitization of the entire content
+        file_content = sanitize_file_content(file_content)
+        
         with open(output_file, 'w', encoding='utf-8') as f:
-            f.write("\n\n".join(all_content))
+            f.write(file_content)
         
         print(f"Saved influence information for {artist_name}")
         return True
@@ -192,7 +189,7 @@ def main():
     print(f"Loaded {len(artist_df)} artists")
     
     # Create output directory
-    output_dir = create_output_directory()
+    output_dir = create_output_directory("blues_artist_data")
     
     # Track successful and failed scrapes
     success_count = 0

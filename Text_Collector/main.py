@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Main script to run the complete blues artist data collection pipeline.
-This script executes the CSV processing, web scraping, and Discogs API phases.
+This script executes the CSV processing, web scraping, Discogs API, and Wikipedia phases.
 """
 
 import os
@@ -9,19 +9,20 @@ import sys
 import time
 from process_csv import main as process_csv_main
 from scrape_artists import main as scrape_artists_main
+from sanitizer import sanitize_text, sanitize_filename
 
 def check_prerequisites():
     """Check if the required directories exist."""
-    if not os.path.exists('blues_data'):
-        os.makedirs('blues_data')
-        print("Created 'blues_data' directory. Please place your CSV files there.")
+    if not os.path.exists('input_data'):
+        os.makedirs('input_data')
+        print("Created 'input_data' directory. Please place your CSV files there.")
         return False
     
-    # Check if there are any files in the blues_data directory
-    files = [f for f in os.listdir('blues_data') if os.path.isfile(os.path.join('blues_data', f))]
+    # Check if there are any files in the input_data directory
+    files = [f for f in os.listdir('input_data') if os.path.isfile(os.path.join('input_data', f))]
     if not files:
-        print("Warning: No files found in 'blues_data' directory.")
-        print("Please add your CSV files containing artist data to the 'blues_data' directory.")
+        print("Warning: No files found in 'input_data' directory.")
+        print("Please add your CSV files containing artist data to the 'input_data' directory.")
         return False
     
     return True
@@ -38,9 +39,9 @@ def main():
         return
     
     try:
-        # Create artist_data directory if it doesn't exist
-        if not os.path.exists('artist_data'):
-            os.makedirs('artist_data')
+        # Create blues_artist_data directory if it doesn't exist
+        if not os.path.exists('blues_artist_data'):
+            os.makedirs('blues_artist_data')
         
         # Phase 1: Process CSV files
         print("\n--- PHASE 1: PROCESSING CSV FILES ---")
@@ -56,8 +57,21 @@ def main():
         print("Pausing for 2 seconds before starting web scraping...")
         time.sleep(2)
         
-        # Phase 2: Scrape artist information from regular websites
-        print("\n--- PHASE 2: SCRAPING ARTIST INFORMATION FROM WEBSITES ---")
+        # Phase 2: Process Wikipedia URLs
+        print("\n--- PHASE 2: PROCESSING WIKIPEDIA URLS ---")
+        try:
+            from wikipedia_collector import process_wikipedia_urls
+            process_wikipedia_urls(output_dir="blues_artist_data")
+            print("\nWikipedia processing completed successfully.")
+        except ImportError:
+            print("\nError: wikipedia_collector.py not found or could not be imported.")
+            print("Make sure the wikipedia_collector.py file is in the same directory.")
+        except Exception as e:
+            print(f"\n\nError during Wikipedia processing: {str(e)}")
+            print("Some Wikipedia data may have been collected before the error occurred.")
+        
+        # Phase 3: Scrape artist information from other websites
+        print("\n--- PHASE 3: SCRAPING ARTIST INFORMATION FROM OTHER WEBSITES ---")
         try:
             scrape_artists_main()
             print("\nWebsite scraping completed successfully.")
@@ -65,12 +79,12 @@ def main():
             print(f"\n\nError during website scraping phase: {str(e)}")
             print("Some artist data may have been collected before the error occurred.")
         
-        # Phase 3: Process Discogs URLs if .env file exists
+        # Phase 4: Process Discogs URLs if .env file exists
         if os.path.exists('.env'):
-            print("\n--- PHASE 3: PROCESSING DISCOGS URLS ---")
+            print("\n--- PHASE 4: PROCESSING DISCOGS URLS ---")
             try:
                 from discogs_collector import process_discogs_urls
-                process_discogs_urls()
+                process_discogs_urls(output_dir="blues_artist_data")
                 print("\nDiscogs processing completed successfully.")
             except ImportError:
                 print("\nError: discogs_oauth_client.py not found or could not be imported.")
@@ -84,7 +98,7 @@ def main():
             print("You can use .env.example as a template.")
         
         print("\nData collection pipeline completed.")
-        print("Check the 'artist_data' directory for the scraped content.")
+        print("Check the 'blues_artist_data' directory for the scraped content.")
         
     except KeyboardInterrupt:
         print("\n\nProcess interrupted by user. Exiting...")

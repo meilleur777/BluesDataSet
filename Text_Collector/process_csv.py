@@ -3,7 +3,7 @@ import glob
 import pandas as pd
 import re
 
-def find_artist_csv_files(data_dir="blues_data"):
+def find_artist_csv_files(data_dir="input_data"):
     """Find all CSV files containing 'artist' or 'musician' in their names."""
     pattern = os.path.join(data_dir, "*artist*.csv")
     artist_files = glob.glob(pattern)
@@ -63,7 +63,7 @@ def main():
     csv_files = find_artist_csv_files()
     
     if not csv_files:
-        print("No matching CSV files found in blues_data directory")
+        print("No matching CSV files found in input_data directory")
         return
     
     print(f"Found {len(csv_files)} CSV files to process")
