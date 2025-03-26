@@ -78,7 +78,7 @@ class BluesIRSystem:
             for filename in os.listdir(artist_path):
                 if not filename.endswith('.txt'):
                     continue
-                    
+                
                 file_path = os.path.join(artist_path, filename)
                 doc_id = self.doc_id_counter
                 self.doc_id_counter += 1
@@ -206,7 +206,7 @@ class BluesIRSystem:
                 result = result.intersection(operands[i+1])
             elif operators[i] == 'OR':
                 result = result.union(operands[i+1])
-        
+
         return result
     
     def search(self, query_string):

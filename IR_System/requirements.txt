@@ -1,1 +1,24 @@
+# Core dependencies
 nltk>=3.8.1
+numpy>=1.24.0
+scikit-learn>=1.2.0
+pandas>=2.0.0
+scipy>=1.10.0
+
+# For visualization and analysis
+matplotlib>=3.7.0
+wordcloud>=1.8.0
+networkx>=3.0.0
+community>=1.0.0b1
+
+# For handling text processing
+python-Levenshtein>=0.20.9
+
+# For document clustering
+sklearn>=0.0
+
+# Optional dependencies for advanced features
+# Uncomment if needed
+# plotly>=5.13.0  # For interactive visualizations
+# hdbscan>=0.8.29  # For alternative clustering algorithms
+# gensim>=4.3.0  # For topic modeling and word embeddings
