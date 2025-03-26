@@ -1,6 +1,6 @@
 # Blues Artist Information Retrieval System
 
-A Boolean Information Retrieval (IR) system for searching through blues artist text data. This system allows you to perform complex searches with Boolean operators (AND, OR, NOT) to find relevant information about blues musicians.
+A Boolean Information Retrieval system for searching through blues artist text data. This system allows you to perform simple searches with Boolean operators (AND, OR, NOT) to find relevant information about blues musicians.
 
 ## Features
 
@@ -8,7 +8,6 @@ A Boolean Information Retrieval (IR) system for searching through blues artist t
 - **Text Preprocessing**: Automatic handling of lowercase conversion, punctuation removal, and stopword filtering
 - **Interactive Interface**: User-friendly command-line interface for exploring the data
 - **Document Preview**: View matching document content directly in the terminal
-- **Index Statistics**: See which terms appear most frequently across the document collection
 
 ## Requirements
 
@@ -91,12 +90,3 @@ Example of the inverted index structure:
 - **Binary Logic**: Terms are either present or absent, with no partial matching
 - **No Fuzzy Matching**: Misspellings and variant spellings aren't handled
 - **Simple Model**: Doesn't use advanced IR techniques like TF-IDF weighting or semantic understanding
-
-## Future Extensions
-
-Potential improvements for future versions:
-
-- Add support for phrase queries (e.g., "Muddy Waters" as an exact phrase)
-- Implement wildcard searches (e.g., "blue*" to match "blues", "bluesy", etc.)
-- Add spelling correction for query terms
-- Extend to a Vector Space Model for ranked retrieval
