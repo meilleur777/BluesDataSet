@@ -9,12 +9,6 @@ A Boolean Information Retrieval system for searching through blues artist text d
 - **Interactive Interface**: User-friendly command-line interface for exploring the data
 - **Document Preview**: View matching document content directly in the terminal
 
-## Requirements
-
-- Python 3.6+
-- NLTK (Natural Language Toolkit)
-- A collection of text files in the `blues_artist_data` directory
-
 ## Installation
 
 1. Clone this repository or download the files:
