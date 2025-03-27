@@ -47,6 +47,7 @@ Each component has its own dedicated README.md file with specific installation a
 3. Use IR_System component to make IR system with .txt files
 
 See the README.md files in each component directory for detailed instructions.
+There are sample input and output files in each components.
 
 ## License
 
