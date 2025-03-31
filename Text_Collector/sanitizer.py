@@ -9,7 +9,6 @@ handling throughout the application.
 import re
 import unicodedata
 
-
 def sanitize_text(text):
     """
     Clean up text content by removing or replacing problematic characters.
@@ -71,11 +70,10 @@ def sanitize_text(text):
     
     return text
 
-
 def sanitize_filename(name):
     """
     Sanitize a string to be used as a filename or directory name.
-    Removes or replaces invalid characters.
+    Removes or replaces invalid characters with specific handling for artist names.
     
     Args:
         name (str): The filename to sanitize
@@ -103,23 +101,30 @@ def sanitize_filename(name):
     invalid_chars = r'[<>:"/\\|?*\']'
     sanitized = re.sub(invalid_chars, '_', name)
     
-    # Replace characters that might be confusion at beginning/end
-    sanitized = sanitized.strip('.')
-    sanitized = sanitized.strip()
+    # Replace specific characters as requested:
+    # 1. Delete commas and periods completely
+    sanitized = sanitized.replace(',', '')
+    sanitized = sanitized.replace('.', '')
     
-    # Replace multiple consecutive underscores with a single one
-    sanitized = re.sub(r'_+', '_', sanitized)
+    # 2. Change hyphens to underscores
+    sanitized = sanitized.replace('-', '_')
+    
+    # Replace characters that might be confusion at beginning/end
+    sanitized = sanitized.strip()
     
     # Replace whitespace with underscores
     sanitized = sanitized.replace(' ', '_')
+    
+    # Replace multiple consecutive underscores with a single one
+    sanitized = re.sub(r'_+', '_', sanitized)
     
     # Limit length (Windows has a 255 character path limit)
     max_length = 100
     if len(sanitized) > max_length:
         sanitized = sanitized[:max_length]
     
-    # Ensure we don't end with an underscore or dot
-    sanitized = sanitized.rstrip('_.')
+    # Ensure we don't end with an underscore
+    sanitized = sanitized.rstrip('_')
     
     # If empty after sanitization, provide a default
     if not sanitized:
