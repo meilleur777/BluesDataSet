@@ -1,18 +1,12 @@
 import os
 import re
 import string
+import subprocess
+import platform
 from collections import defaultdict
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-
-# Download NLTK resources (only needed first time)
-try:
-    nltk.data.find('tokenizers/punkt')
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('punkt')
-    nltk.download('stopwords')
 
 class BluesIRSystem:
     """Boolean Information Retrieval System for blues artist data."""
@@ -25,9 +19,64 @@ class BluesIRSystem:
         self.doc_id_counter = 0
         self.stop_words = set(stopwords.words('english'))
         
-        # Additional blues-specific stop words
-        self.stop_words.update(['blues', 'music', 'musician', 'artist', 'song', 'songs'])
+        # Additional music-specific stop words (removed 'blues')
+        self.stop_words.update(['music', 'musician', 'artist', 'song', 'songs'])
         
+    def open_file_with_default_application(self, file_path):
+        """
+        Open a file with the default application based on the operating system.
+        
+        Args:
+            file_path: Path to the file to open
+        """
+        try:
+            if platform.system() == 'Windows':
+                os.startfile(file_path)
+            elif platform.system() == 'Darwin':  # macOS
+                subprocess.call(['open', file_path])
+            else:  # Linux and other Unix-like systems
+                subprocess.call(['xdg-open', file_path])
+            print(f"Opened file with default application: {file_path}")
+            return True
+        except Exception as e:
+            print(f"Error opening file with default application: {e}")
+            return False
+    
+    def open_document_by_id(self, doc_id):
+        """
+        Open a document by its ID using the default application.
+        
+        Args:
+            doc_id: ID of the document to open (integer)
+            
+        Returns:
+            Boolean indicating if document was found and opened
+        """
+        try:
+            # Convert string to integer if needed
+            if isinstance(doc_id, str):
+                doc_id = int(doc_id)
+                
+            # Check if document ID exists
+            if doc_id not in self.document_map:
+                print(f"Document ID {doc_id} not found.")
+                return False
+            
+            # Get file path and open with default application
+            file_path = self.document_map[doc_id]['path']
+            artist = self.document_map[doc_id]['artist']
+            filename = self.document_map[doc_id]['filename']
+            
+            print(f"Opening document ID {doc_id}: {artist} - {filename}")
+            return self.open_file_with_default_application(file_path)
+            
+        except ValueError:
+            print(f"Invalid document ID format: {doc_id}. Please provide a valid integer ID.")
+            return False
+        except Exception as e:
+            print(f"Error opening document ID {doc_id}: {e}")
+            return False
+    
     def preprocess_text(self, text):
         """
         Preprocess text by:
@@ -264,6 +313,7 @@ class BluesIRSystem:
         print("Enter 'q' to quit")
         print("Enter 'stats' to see index statistics")
         print("Enter 'help' to see example queries")
+        print("Enter 'open <id>' to open a document directly by ID")
         print("=====================================\n")
         
         while True:
@@ -288,6 +338,16 @@ class BluesIRSystem:
                 print("  guitar OR harmonica")
                 print("  chicago AND (guitar OR harmonica)")
                 print("  (muddy AND waters) OR (howlin AND wolf)")
+                print("  open 5 - Opens document with ID 5 in your default text viewer")
+                continue
+            
+            # Handle 'open <id>' command
+            if query.lower().startswith('open '):
+                doc_id_str = query[5:].strip()
+                try:
+                    self.open_document_by_id(doc_id_str)
+                except ValueError:
+                    print(f"Invalid document ID: {doc_id_str}")
                 continue
             
             results = self.search(query)
@@ -297,39 +357,75 @@ class BluesIRSystem:
                 continue
             
             print(f"\nFound {len(results)} matching documents:")
+            print(f"{'#':<4} {'Doc ID':<8} {'Artist':<25} {'Filename':<30}")
+            print("-" * 70)
             for i, result in enumerate(results):
-                print(f"{i+1}. {result['artist']} - {result['filename']}")
+                print(f"{i+1:<4} {result['id']:<8} {result['artist']:<25} {result['filename']:<30}")
+            
+            print("\nNote: Document IDs are used for relevance judgments in evaluation")
             
             while True:
-                view = input("\nEnter number to view document content (or 'b' to go back): ")
+                view = input("\nEnter number to view document content, 'o#' to open with default app, 'id#' to open by ID, or 'b' to go back: ")
                 if view.lower() == 'b':
                     break
                 
+                # Handle open with default application command
+                if view.lower().startswith('o') and view[1:].isdigit():
+                    try:
+                        open_idx = int(view[1:]) - 1
+                        if 0 <= open_idx < len(results):
+                            doc_id = results[open_idx]['id']
+                            file_path = self.document_map[doc_id]['path']
+                            self.open_file_with_default_application(file_path)
+                        else:
+                            print("Invalid document number.")
+                    except ValueError:
+                        print("Please enter a valid format (o1, o2, etc.).")
+                    continue
+                
+                # Handle open by document ID command
+                if view.lower().startswith('id') and view[2:].isdigit():
+                    try:
+                        doc_id = int(view[2:])
+                        self.open_document_by_id(doc_id)
+                    except ValueError:
+                        print("Please enter a valid format (id1, id2, etc.).")
+                    continue
+                
+                # Handle standard view in terminal
                 try:
                     view_index = int(view) - 1
                     if 0 <= view_index < len(results):
                         doc_id = results[view_index]['id']
                         content = self.get_document_content(doc_id)
+                        file_path = self.document_map[doc_id]['path']
                         
                         # Display the document content with some formatting
                         print("\n" + "=" * 80)
+                        print(f"Document ID: {doc_id}")
                         print(f"Document: {results[view_index]['filename']}")
                         print(f"Artist: {results[view_index]['artist']}")
+                        print(f"Path: {file_path}")
                         print("=" * 80)
                         
                         # Print a preview (first 500 characters)
                         preview_length = 500
                         if len(content) > preview_length:
                             print(content[:preview_length] + "...")
-                            more = input("Display more? (y/n): ")
+                            more = input("Display more (y), open with default application (o), or continue (n)? ")
                             if more.lower() == 'y':
                                 print("\n" + content)
+                            elif more.lower() == 'o':
+                                self.open_file_with_default_application(file_path)
                         else:
                             print(content)
+                            open_option = input("Open with default application (y/n)? ")
+                            if open_option.lower() == 'y':
+                                self.open_file_with_default_application(file_path)
                     else:
                         print("Invalid document number.")
                 except ValueError:
-                    print("Please enter a valid number.")
+                    print("Please enter a valid number or command.")
 
 if __name__ == "__main__":
     # Initialize the IR system

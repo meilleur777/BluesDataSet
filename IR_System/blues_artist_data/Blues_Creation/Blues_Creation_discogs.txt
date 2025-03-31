@@ -1,7 +1,11 @@
 ARTIST: Blues Creation
 
 PROFILE:
+Japanese rock band from Tokyo, active from 1969 to 1971.
+They started off as standard late 60s traditional blues-rock band but quickly moved towards a sound steeped in heavy rock and acid-blues strongly guitar-driven. After their dissolution they changed their name to [a414055].
 
 RELATED URLS:
+- https://en.wikipedia.org/wiki/Creation_(Japanese_band)
+- https://www.psychedelicbabymag.com/2020/09/blues-creation-interview-with-kazuo-takeda.html
 
 Source: https://www.discogs.com/artist/510368

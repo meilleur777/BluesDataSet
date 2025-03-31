@@ -8,6 +8,7 @@ A Boolean Information Retrieval system for searching through blues artist text d
 - **Text Preprocessing**: Automatic handling of lowercase conversion, punctuation removal, and stopword filtering
 - **Interactive Interface**: User-friendly command-line interface for exploring the data
 - **Document Preview**: View matching document content directly in the terminal
+- **External Viewer**: Open documents in your default text editor by ID
 
 ## Installation
 
@@ -22,7 +23,13 @@ A Boolean Information Retrieval system for searching through blues artist text d
    pip install -r requirements.txt
    ```
 
-3. Make sure you have the `blues_artist_data` directory (output from the Text_Collector component) in the correct location. Current repository has sample output from Text_Collector.
+3. Install required NLTK resources:
+   ```
+   python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
+   ```
+   This step is essential as the system requires these NLTK resources for text processing.
+
+4. Make sure you have the `blues_artist_data` directory with text files about blues artists.
 
 ## Usage
 
@@ -43,7 +50,29 @@ A Boolean Information Retrieval system for searching through blues artist text d
 5. Special commands:
    - Type `help` to see example queries
    - Type `stats` to see index statistics
+   - Type `open <id>` to open a document with the specified ID in your default text viewer
    - Type `q` to quit the program
+
+## Specialized Evaluators
+
+The system includes specialized evaluators for specific queries:
+
+1. **Blues Brothers Evaluator**: Evaluates the query "blues AND brothers" against documents containing "blues brothers" or "the blues brothers"
+   ```
+   python blues_brothers_evaluator.py
+   ```
+
+2. **Nat King Evaluator**: Evaluates the query "nat AND king" against documents containing "nat king cole"
+   ```
+   python nat_king_evaluator.py
+   ```
+
+3. **Three Kings Evaluator**: Evaluates a query for documents containing all three blues kings (B.B. King, Albert King, and Freddie King)
+   ```
+   python three_kings_evaluator.py
+   ```
+
+These evaluators append their results to a `test_queries.json` file that can be used for query testing.
 
 ## Example Queries
 
@@ -77,10 +106,3 @@ Example of the inverted index structure:
   ...
 }
 ```
-
-## Limitations
-
-- **No Ranking**: All matching documents are considered equally relevant
-- **Binary Logic**: Terms are either present or absent, with no partial matching
-- **No Fuzzy Matching**: Misspellings and variant spellings aren't handled
-- **Simple Model**: Doesn't use advanced IR techniques like TF-IDF weighting or semantic understanding
