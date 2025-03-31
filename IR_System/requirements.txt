@@ -5,17 +5,23 @@ scikit-learn>=1.2.0
 pandas>=2.0.0
 scipy>=1.10.0
 
+# For text processing
+python-Levenshtein>=0.20.9
+
 # For visualization and analysis
 matplotlib>=3.7.0
 wordcloud>=1.8.0
 networkx>=3.0.0
-community>=1.0.0b1
 
-# For handling text processing
-python-Levenshtein>=0.20.9
+# For IR evaluation
+tabulate>=0.9.0  # For better formatted display of evaluation results
+colorama>=0.4.6  # For colored terminal output in the interactive tool
 
-# For document clustering
-sklearn>=0.0
+# scikit-learn is already listed above - no need for sklearn package
+# The sklearn package is just a placeholder that points to scikit-learn
+
+# Required for interactive evaluation tools
+rich>=13.0.0  # For enhanced terminal display and formatting
 
 # Optional dependencies for advanced features
 # Uncomment if needed

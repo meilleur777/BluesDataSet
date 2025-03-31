@@ -1,0 +1,123 @@
+{
+  "instructions": "Fill in the queries and mark relevant document IDs for each query",
+  "sample_documents": [
+    {
+      "id": 0,
+      "artist": "101_Strings",
+      "filename": "101_Strings_discogs.txt"
+    },
+    {
+      "id": 1,
+      "artist": "Adolphus_Bell",
+      "filename": "Adolphus_Bell_wikipedia.txt"
+    },
+    {
+      "id": 2,
+      "artist": "After_Blues",
+      "filename": "After_Blues_discogs.txt"
+    },
+    {
+      "id": 3,
+      "artist": "Alan_Wilson",
+      "filename": "Alan_Wilson_wikipedia.txt"
+    },
+    {
+      "id": 4,
+      "artist": "Alberta_Hunter",
+      "filename": "Alberta_Hunter_discogs.txt"
+    },
+    {
+      "id": 5,
+      "artist": "Alberta_Hunter",
+      "filename": "Alberta_Hunter_wikipedia.txt"
+    },
+    {
+      "id": 6,
+      "artist": "Albert_Ammons",
+      "filename": "Albert_Ammons_wikipedia.txt"
+    },
+    {
+      "id": 7,
+      "artist": "Albert_Collins",
+      "filename": "Albert_Collins_wikipedia.txt"
+    },
+    {
+      "id": 8,
+      "artist": "Albert_King",
+      "filename": "Albert_King_discogs.txt"
+    },
+    {
+      "id": 9,
+      "artist": "Albert_King",
+      "filename": "Albert_King_wikipedia.txt"
+    },
+    {
+      "id": 10,
+      "artist": "Albert_White",
+      "filename": "Albert_White_wikipedia.txt"
+    },
+    {
+      "id": 11,
+      "artist": "Alec_Seward",
+      "filename": "Alec_Seward_wikipedia.txt"
+    },
+    {
+      "id": 12,
+      "artist": "Alexis_Korner",
+      "filename": "Alexis_Korner_wikipedia.txt"
+    },
+    {
+      "id": 13,
+      "artist": "Alger_Texas_Alexander",
+      "filename": "Alger_Texas_Alexander_wikipedia.txt"
+    },
+    {
+      "id": 14,
+      "artist": "Allen_Ginsberg",
+      "filename": "Allen_Ginsberg_discogs.txt"
+    },
+    {
+      "id": 15,
+      "artist": "Alvin_Lee",
+      "filename": "Alvin_Lee_discogs.txt"
+    },
+    {
+      "id": 16,
+      "artist": "Alvin_Youngblood_Hart",
+      "filename": "Alvin_Youngblood_Hart_wikipedia.txt"
+    },
+    {
+      "id": 17,
+      "artist": "Amos_Milburn",
+      "filename": "Amos_Milburn_wikipedia.txt"
+    },
+    {
+      "id": 18,
+      "artist": "Andrew_Brown",
+      "filename": "Andrew_Brown_discogs.txt"
+    },
+    {
+      "id": 19,
+      "artist": "Andrew_Odom",
+      "filename": "Andrew_Odom_wikipedia.txt"
+    }
+  ],
+  "queries": [
+    {
+      "id": "Q1",
+      "query": "muddy AND waters",
+      "description": "Documents about Muddy Waters",
+      "relevant_docs": [],
+      "comments": {
+        "sample_doc_id": "Add your judgment notes here - why is this document relevant or not?"
+      }
+    },
+    {
+      "id": "Q2",
+      "query": "chicago AND (guitar OR harmonica)",
+      "description": "Documents about Chicago blues musicians who play guitar or harmonica",
+      "relevant_docs": [],
+      "comments": {}
+    }
+  ]
+}
