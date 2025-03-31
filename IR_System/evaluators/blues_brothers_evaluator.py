@@ -5,16 +5,17 @@ Blues Brothers Query Evaluator
 This script evaluates the IR system for the query "blues AND brothers" and appends
 the evaluation results to the test_queries.json file with relevance judgments based on specific criteria:
 1. Documents returned by the IR system for "blues AND brothers"
-2. Documents containing the exact phrase "blues brothers"
-3. Documents containing the exact phrase "the blues brothers"
+2. Documents containing the exact phrase "the blues brothers"
 
-Documents meeting criteria 2 or 3 are considered truly relevant.
+Only documents meeting criterion 2 are considered truly relevant.
 """
 
 import os
+import sys
 import json
 import re
-import sys
+
+# Add parent directory to path to import BluesIRSystem
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from blues_ir_system import BluesIRSystem
 
@@ -69,8 +70,11 @@ def append_test_query():
     """
     # Initialize the IR system
     print("Initializing IR system...")
+    # Get the absolute path to the parent directory
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # Construct the path to the data directory
     data_dir = os.path.join(parent_dir, "blues_artist_data")
+    # Initialize the IR system with the correct data directory
     ir_system = BluesIRSystem(data_directory=data_dir)
     ir_system.build_index()
     
@@ -80,28 +84,18 @@ def append_test_query():
     boolean_results = ir_system.search(query)
     boolean_doc_ids = {result['id'] for result in boolean_results}
     
-    # Search for exact phrases
+    # Search for exact phrase "the blues brothers" only
     data_directory = ir_system.data_directory
-    print("Searching for phrase 'blues brothers'...")
-    phrase1_doc_ids = search_phrase_in_files(data_directory, "blues brothers")
-    
     print("Searching for phrase 'the blues brothers'...")
-    phrase2_doc_ids = search_phrase_in_files(data_directory, "the blues brothers")
-    
-    # Combine relevant document IDs (those containing either phrase)
-    relevant_doc_ids = phrase1_doc_ids.union(phrase2_doc_ids)
+    relevant_doc_ids = search_phrase_in_files(data_directory, "the blues brothers")
     
     # Create comments for each document
     comments = {}
     for doc_id in boolean_doc_ids:
-        if doc_id in phrase1_doc_ids and doc_id in phrase2_doc_ids:
-            comments[str(doc_id)] = "Contains both 'blues brothers' and 'the blues brothers' phrases"
-        elif doc_id in phrase1_doc_ids:
-            comments[str(doc_id)] = "Contains 'blues brothers' phrase"
-        elif doc_id in phrase2_doc_ids:
-            comments[str(doc_id)] = "Contains 'the blues brothers' phrase"
+        if doc_id in relevant_doc_ids:
+            comments[str(doc_id)] = "Contains 'the blues brothers' phrase - relevant"
         else:
-            comments[str(doc_id)] = "Retrieved by Boolean query but does not contain target phrases"
+            comments[str(doc_id)] = "Retrieved by Boolean query but does not contain 'the blues brothers' phrase - not relevant"
     
     # Identify false negatives (relevant docs not retrieved by Boolean query)
     for doc_id in relevant_doc_ids:
@@ -109,16 +103,7 @@ def append_test_query():
             doc_info = ir_system.document_map.get(doc_id, {})
             artist = doc_info.get('artist', 'Unknown')
             filename = doc_info.get('filename', 'Unknown')
-            
-            comment = "Relevant but not retrieved by Boolean query. "
-            if doc_id in phrase1_doc_ids and doc_id in phrase2_doc_ids:
-                comment += "Contains both 'blues brothers' and 'the blues brothers' phrases"
-            elif doc_id in phrase1_doc_ids:
-                comment += "Contains 'blues brothers' phrase"
-            else:
-                comment += "Contains 'the blues brothers' phrase"
-            
-            comments[str(doc_id)] = comment
+            comments[str(doc_id)] = "Contains 'the blues brothers' phrase but not retrieved by Boolean query - relevant but missed"
     
     # Calculate precision and recall
     true_positives = len(boolean_doc_ids.intersection(relevant_doc_ids))
@@ -132,8 +117,7 @@ def append_test_query():
     # Print evaluation summary
     print("\n====== Evaluation Summary ======")
     print(f"Boolean query results: {len(boolean_doc_ids)} documents")
-    print(f"Documents with 'blues brothers': {len(phrase1_doc_ids)}")
-    print(f"Documents with 'the blues brothers': {len(phrase2_doc_ids)}")
+    print(f"Documents with 'the blues brothers': {len(relevant_doc_ids)}")
     print(f"True relevant documents: {len(relevant_doc_ids)}")
     print(f"Precision: {precision:.4f}")
     print(f"Recall: {recall:.4f}")
@@ -149,7 +133,7 @@ def append_test_query():
     }
     
     # Read existing queries or create new list
-    output_file = "test_queries.json"
+    output_file = os.path.join(parent_dir, "test_queries.json")
     queries = []
     
     try:
